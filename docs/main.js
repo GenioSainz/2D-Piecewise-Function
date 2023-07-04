@@ -210,23 +210,24 @@ function getTraces_tiles2D(x,y,corners_mat){
                           opacity:1, 
                           showlegend: true,
                           type: 'surface', 
-                          colorscale:'Jet',
-                          colorbar:{x:-0.15,
-                                    len:0.6,title:{ text:'',side:'right',font:{size:16}},
-                                    bgcolor:"rgb(150,150,150)",
-                                    bordercolor:"white",
-                                    borderwidth:2,
-                                },
-                          x: x,
-                          y: y,
-                          z: Z,
-                          contours: {
-                            z: {
-                                show:true,
-                                project:{z: false,usecolormap: false,},
-                                highlightwidth:10,highlightcolor:"white",
-                                start:cornersMin, end:cornersMax, size: 0.25}}
-                        };
+                  
+                            colorscale:'Jet',
+                            colorbar:{x:-0.15,
+                                        len:0.6,title:{ text:'',side:'right',font:{size:16}},
+                                        bgcolor:"rgb(150,150,150)",
+                                        bordercolor:"white",
+                                        borderwidth:2,
+                                    },
+                            x: x,
+                            y: y,
+                            z: Z,
+                            contours: {
+                                z: {
+                                    show:true,
+                                    project:{z: false,usecolormap: false,},
+                                    highlightwidth:10,highlightcolor:"white",
+                                    start:cornersMin, end:cornersMax, size: 0.25}}
+                            };
 
         return dataTiles
 };
@@ -267,11 +268,11 @@ function getTraces_grid(corners_mat,Z){
     var xy1  = tf.ones([1,nGrid]).mul(1).arraySync()[0];
     var xy2  = tf.ones([1,nGrid]).mul(2).arraySync()[0]
     var zy0  = Z[0];
-    var zy1  = Z[20];
-    var zy2  = Z[40];
+    var zy1  = Z[(nGrid-1)/2];
+    var zy2  = Z[nGrid-1];
     var zx0  = Z.map(row => row[0]);
-    var zx1  = Z.map(row => row[20]);
-    var zx2  = Z.map(row => row[40]);
+    var zx1  = Z.map(row => row[(nGrid-1)/2]);
+    var zx2  = Z.map(row => row[nGrid-1]);
     var zMin = tf.ones([nGrid,nGrid]).mul(cornersMin).arraySync()[0]
     
     var U    = undefined
@@ -381,7 +382,13 @@ function init_layout(data){
 function fun_smoothstep(t){
 
     return 6*t**5-15*t**4+10*t**3;
+    // return 1 - Math.cos((t * Math.PI) / 2);
+    // return t< 0.5 ? 16 * t**5 : 1 - Math.pow(-2 * t + 2, 5) / 2;
+    //return -(Math.cos(Math.PI * t) - 1) / 2
+
 };
+
+   
 
 
 var countUpdtaes = 0;
