@@ -2,6 +2,7 @@
 // Divs Vars
 //////////////
 var id_plot  = 'id_plot';
+var id_gui   = 'gui'
 var divPad   = 25;
 var guiWidth = 250
 
@@ -13,32 +14,63 @@ function setup() {
     createCanvas(windowWidth,windowHeight);
     background(0);
 
+
+    // div plotly
+    ////////////////
     var div_plot = createDiv('').id(id_plot).style('border','1px black solid'); 
 
     if(windowWidth>windowHeight){
             divSizeH = windowHeight - 2*divPad;
             divSizeW = windowWidth  - 2*divPad - guiWidth;
-            div_plot.position(windowWidth/2-divSizeW/2-guiWidth/2,divPad)
+            div_plot.position(guiWidth + divPad,divPad)
     }else{
             divSizeH = windowHeight/2 - 2*divPad;
             divSizeW = windowWidth    - 2*divPad;
             div_plot.position(windowWidth/2-divSizeW/2,windowHeight/4)
-    }
+    };
+
+    // div gui
+    /////////////
+    createDiv('').id(id_gui).position(0,0)
 };
+
+
+// smoothstepFunctions
+/////////////////////////
+var smoothstepFunctions = {
+
+                            smoothstep0: (t)=>  t,
+                            smoothstep1: (t)=> -2*t**3+3*t**2,
+                            smoothstep2: (t)=>  6*t**5-15*t**4+10*t**3,
+                            smoothstep3: (t)=> -20*t**7+70*t**6-84*t**5+35*t**4,
+};
+
+var smoothstepN =  smoothstepFunctions.smoothstep2;
+
+
 
 // Corners Vars
 //////////////////
 var nCorners    = 3;
-var nGrid       = 41;
+var nGrid       = 101;
 var cornersMin  = -5;
 var cornersMax  =  5;
 var cornersStep = 1;
 
+// Tiles Coordinates
+///////////////////////
 var x      = tf.linspace(0,nCorners-1,nGrid).arraySync();
 var y      = tf.linspace(0,nCorners-1,nGrid).arraySync();
 var [X, Y] = tf.meshgrid(x, y);
      X     = X.arraySync();
      Y     = Y.arraySync();
+
+// Corners Coordinates
+/////////////////////////
+var xy       = [0,1,2];
+var [XCorners, YCorners]  = tf.meshgrid(xy, xy);
+var xCorners = XCorners.flatten().arraySync();
+var yCorners = YCorners.flatten().arraySync();
 
 var shapes = {
                 shape0: [[0,0,0],[0,0,0],[0,0,0]],
@@ -60,13 +92,16 @@ var guiVars = {
                 corner_G: 0,
                 corner_H: 0,
                 corner_I: 0,
-                mode:'shape1'
+                shape:'shape3',
+                cMap:'Jet',
+                zRatio:0.5,
+                blendingFun:'smoothstep2'
 };
 
 
 // Initial Corners Mat from guiVar
 ////////////////////////////////////
-var initCornerMat      = shapes[guiVars.mode].flat();
+var initCornerMat      = shapes[guiVars.shape].flat();
 var guiVarsCornersKeys = Object.keys(guiVars).filter((key) => key.includes('corner_'));
    
     guiVarsCornersKeys.forEach( (corner,indx)=> {
@@ -76,33 +111,47 @@ var guiVarsCornersKeys = Object.keys(guiVars).filter((key) => key.includes('corn
 
 // Gui creation
 //////////////////
-var gui   = new dat.gui.GUI({width:guiWidth});
+var gui   = new dat.GUI({width:guiWidth,autoPlace: true});
+setTimeout(()=>{document.querySelector("#gui").append(gui.domElement)},100);
 
-// Folders MODES
+// Folders Color Map
+///////////////////
+var folderColorMap = gui.addFolder('Color Map');
+    folderColorMap.add(guiVars, 'cMap', ['Portland','Picnic','Jet','Earth','Hot'] ).onChange( (cMap)=>{ updatePlots_ColorMap( cMap ) });
+
+// Folders Aspect Ratio
+///////////////////
+var folderAspectRatio = gui.addFolder('Aspect Ratio');
+    folderAspectRatio.add(guiVars, 'zRatio',0.25,1.25,0.25).onChange( (zRatio)=>{ updatePlots_zRatio( zRatio) } );
+
+// Folders Smoothstep
+///////////////////////
+var folderFunctions = gui.addFolder('Blending Functions');
+    folderFunctions.add(guiVars, 'blendingFun', ['smoothstep0','smoothstep1','smoothstep2','smoothstep3']).onChange( (fun)=>{
+                                                                                                                        
+                                                                                               smoothstepN =  smoothstepFunctions[fun];
+                                                                                               updatePlots_traces( getCornersMat() )
+    });
+
+// Folders Shapes
 ///////////////////
 var folderShapes = gui.addFolder('Shapes');
-    folderShapes.add(guiVars, 'mode', [ 'random1','random2','shape0','shape1', 'shape2', 'shape3','shape4'] ).onChange( function(shape) {
+    folderShapes.add(guiVars, 'shape', [ 'random1','random2','shape0','shape1', 'shape2', 'shape3','shape4'] ).onChange( function(shape) {
 
-                                                                                        if(shape=='random1' || shape=='random2' ){
-
-                                                                                            setCornersMat(shapes[shape]());
-                                                                                            updatePlots_traces( getCornersMat() );
-                                                                                        }else{
-                                                                                            setCornersMat(shapes[shape]);
-                                                                                            updatePlots_traces( getCornersMat() );
-                                                                                        }
-                                                                                   });
+                                                                                if( shape.includes('random') ){
+                                                                                    setCornersMat(shapes[shape]());
+                                                                                }else{ 
+                                                                                    setCornersMat(shapes[shape]) 
+                                                                                }
+                                                                                    updatePlots_traces( getCornersMat() );
+                                                                        });
 // Folder Corners SLIDER
 //////////////////////////
-var folderSliders = gui.addFolder('CornersValues');
-var sliders  = Object.keys(guiVars).filter((key) => key.includes('corner_'))
+var folderSliders = gui.addFolder('Corners Values');
+var slidersArray  = Object.keys(guiVars).filter((key) => key.includes('corner_'))
 
-    sliders.forEach( slider => {
-
-        folderSliders.add(guiVars,slider,cornersMin,cornersMax,cornersStep).onChange( function(){ 
-        
-                                                                                                 updatePlots_traces( getCornersMat() ) ;
-                                                                                            })
+    slidersArray.forEach( slider => {
+                                    folderSliders.add(guiVars,slider,cornersMin,cornersMax,cornersStep).onChange( ()=>{ updatePlots_traces(getCornersMat())  })
     });
 
 // Open guis
@@ -115,14 +164,14 @@ setTimeout(()=>{folderSliders.open()},2000);
 setTimeout(()=>{
             
             // Init corners mat
-            var cornersMat = shapes[guiVars.mode]
+            var cornersMat = shapes[guiVars.shape]
   
             // Init layout data
             var tiles   = getTraces_tiles2D(x,y,cornersMat);
             var corners = getTraces_corners(cornersMat);
             var grid    = getTraces_grid(cornersMat,tiles.z)
             var data    = [tiles,corners,grid]
-            init_layout(data)
+            init_layout(data);
 },100);
 
 
@@ -177,7 +226,6 @@ function randomCornes() {
 };
 
 function fun_evalTile(xj,yi,corners_mat){
-         
 
     var i = Math.floor(yi);
     var j = Math.floor(xj);
@@ -186,10 +234,10 @@ function fun_evalTile(xj,yi,corners_mat){
     var b = corners_mat[i  ][j+1];
     var c = corners_mat[i+1][j  ];
     var d = corners_mat[i+1][j+1];
-    
-    var xfactor  = (b-a)*fun_smoothstep(xj-j);
-    var yfactor  = (c-a)*fun_smoothstep(yi-i);
-    var xyfactor = (a-b-c+d)*fun_smoothstep(xj-j)*fun_smoothstep(yi-i);
+                         
+    var xfactor  = (b-a)*smoothstepN(xj-j);
+    var yfactor  = (c-a)*smoothstepN(yi-i);
+    var xyfactor = (a-b-c+d)*smoothstepN(xj-j)*smoothstepN(yi-i);
     
     return a + xfactor + yfactor + xyfactor;
 };
@@ -211,17 +259,17 @@ function getTraces_tiles2D(x,y,corners_mat){
                           showlegend: true,
                           type: 'surface', 
                   
-                            colorscale:'Jet',
-                            colorbar:{x:-0.15,
+                          colorscale:'Jet',
+                          colorbar:{
                                         len:0.6,title:{ text:'',side:'right',font:{size:16}},
                                         bgcolor:"rgb(150,150,150)",
                                         bordercolor:"white",
                                         borderwidth:2,
                                     },
-                            x: x,
-                            y: y,
-                            z: Z,
-                            contours: {
+                           x: X,
+                           y: Y,
+                           z: Z,
+                           contours: {
                                 z: {
                                     show:true,
                                     project:{z: false,usecolormap: false,},
@@ -234,22 +282,18 @@ function getTraces_tiles2D(x,y,corners_mat){
 
 function getTraces_corners(cornersMat){
 
-            var xy     = [0,1,2];
-            var [X, Y] = tf.meshgrid(xy, xy);
-            X          = X.reshape([1, 9]).arraySync()[0];
-            Y          = Y.reshape([1, 9]).arraySync()[0];
-            var Z      = tf.tensor(cornersMat).reshape([1, 9]).add(0.1).arraySync()[0];
+            var Z  = tf.tensor(cornersMat).flatten().add(0.1).arraySync();
 
             var scatterCorners = {
                             
                     name:'Corners',
-                    x: X,
-                    y: Y,
+                    x: xCorners,
+                    y: yCorners,
                     z: Z,
                     type: 'scatter3d',
                     mode: 'markers+text',
                     text: ['A','B','C','D','E','F','G','H','I'],
-                    textfont:{size:20,color:'rgb(255,0,255)'},
+                    textfont:{size:22,color:'rgb(255,0,255)'},
                     showlegend:true,
                     legendgroup: 'Corners',
                     marker: { color: 'rgb(255,255,0)',symbol: 'circle',opacity: 1,size: 12,line: {color: 'rgb(0,0,0)',width: 1}}
@@ -267,6 +311,7 @@ function getTraces_grid(corners_mat,Z){
     var xy0  = tf.ones([1,nGrid]).mul(0).arraySync()[0];
     var xy1  = tf.ones([1,nGrid]).mul(1).arraySync()[0];
     var xy2  = tf.ones([1,nGrid]).mul(2).arraySync()[0]
+
     var zy0  = Z[0];
     var zy1  = Z[(nGrid-1)/2];
     var zy2  = Z[nGrid-1];
@@ -334,7 +379,6 @@ function init_layout(data){
         height: divSizeH,
         showlegend:true,
         legend:{font:{size:16},
-               x:-0.15,
                bgcolor: axisColor,
                bordercolor: 'white',
                borderwidth: 2},
@@ -360,7 +404,6 @@ function init_layout(data){
                     showbackground: true,
                     zerolinecolor: "rgb(0,0,0)",title:'Z',
                     range: [cornersMin-dz,cornersMax+dz],
-                    // tickvals:tf.linspace(-5,5,11).arraySync(),
                     tickvals:[-5,-2.5,0,2.5,5],
            },
         },
@@ -379,19 +422,6 @@ function init_layout(data){
 
 };
 
-function fun_smoothstep(t){
-
-    return 6*t**5-15*t**4+10*t**3;
-    // return 1 - Math.cos((t * Math.PI) / 2);
-    // return t< 0.5 ? 16 * t**5 : 1 - Math.pow(-2 * t + 2, 5) / 2;
-    //return -(Math.cos(Math.PI * t) - 1) / 2
-
-};
-
-   
-
-
-var countUpdtaes = 0;
 function updatePlots_traces(cornersMat){
     
     var zTiles        = getTraces_tiles2D(x,y,cornersMat).z;
@@ -405,17 +435,21 @@ function updatePlots_traces(cornersMat){
     Plotly.update(id_plot, cornersUpdate, {}, [1]);
     Plotly.update(id_plot, gridUpdate   , {}, [2]);
      
-    // count UPDATES
-    // console.log('UPDATES: ',countUpdtaes++)
 };
 
-    // color scale
-    // Plotly.update(id_plot, {colorscale:'Picnic'}, {}, [0]);
-    // Plotly.update(id_plot, {colorscale:'Earth'},  {}, [0]);
 
-    // var newScene = document.getElementById(id_plot).layout.scene;
-    // newScene.aspectratio = {x:1, y:1, z:0.25}
-    // Plotly.relayout(id_plot,newScene);
+function updatePlots_ColorMap(cMap){
+
+         Plotly.update(id_plot, {colorscale:cMap}, {}, [0]);
+};
+
+function updatePlots_zRatio( zRatio){
+         
+        var newScene = document.getElementById(id_plot).layout.scene;
+        newScene.aspectratio = {x:1, y:1, z:zRatio}
+        Plotly.relayout(id_plot,newScene);
+};
+
 
 function windowResized(){
   
@@ -423,5 +457,8 @@ function windowResized(){
     background(0);
     window.location.reload()
 };
+
+
+
 
 

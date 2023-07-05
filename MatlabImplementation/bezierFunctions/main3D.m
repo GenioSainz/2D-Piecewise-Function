@@ -16,7 +16,7 @@ Z(5,:) = Z(1,:)+2;
 Z(6,:) = Z(1,:)+1;
 Z(7,:) = Z(1,:);
 
-noiseA = 2;
+noiseA = 0.5;
 Z      = Z + 2*noiseA*rand(m,n)-noiseA;
 
 P(:,:,1) = X;
@@ -24,7 +24,7 @@ P(:,:,2) = Y;
 P(:,:,3) = Z;
 
 
-u_vec = linspace(0,0.5,21);
+u_vec = linspace(0,1,21);
 v_vec = linspace(0,1,50);
 
 B = fun_bezierFun3D(P,u_vec,v_vec);
