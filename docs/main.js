@@ -1,4 +1,5 @@
 
+
 // Divs Vars
 //////////////
 var id_plot  = 'id_plot';
@@ -46,8 +47,6 @@ var smoothstepFunctions = {
 };
 
 var smoothstepN =  smoothstepFunctions.smoothstep2;
-
-
 
 // Corners Vars
 //////////////////
@@ -111,8 +110,7 @@ var guiVarsCornersKeys = Object.keys(guiVars).filter((key) => key.includes('corn
 
 // Gui creation
 //////////////////
-var gui   = new dat.GUI({width:guiWidth,autoPlace: true});
-setTimeout(()=>{document.querySelector("#gui").append(gui.domElement)},100);
+var gui   = new dat.GUI({width:guiWidth,autoPlace:false});
 
 // Folders Color Map
 ///////////////////
@@ -154,10 +152,14 @@ var slidersArray  = Object.keys(guiVars).filter((key) => key.includes('corner_')
                                     folderSliders.add(guiVars,slider,cornersMin,cornersMax,cornersStep).onChange( ()=>{ updatePlots_traces(getCornersMat())  })
     });
 
+// Move gui to div
+/////////////////////
+setTimeout(()=>{document.querySelector("#gui").append(gui.domElement)},2000);
+
 // Open guis
 ///////////////
-setTimeout(()=>{folderShapes.open()},1000);
-setTimeout(()=>{folderSliders.open()},2000);
+setTimeout(()=>{folderShapes.open()},2500);
+setTimeout(()=>{folderSliders.open()},3000);
     
 // Initial Corners Mat and Plot
 //////////////////////////////////

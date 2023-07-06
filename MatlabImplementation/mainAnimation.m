@@ -2,7 +2,7 @@ clear all;clc;close all
 
 %%% Init corners
 %%%%%%%%%%%%%%%%%%
-nframes   = 100;
+nframes   = 80;
 n_corners = 3;
 a         = -3;
 b         = 3;
@@ -19,24 +19,38 @@ b         = 3;
 % m3 = a + (b-a)*rand(3);
 % m4 = a + (b-a)*rand(3);
 
-m0 = zeros(3);
+% m0 = zeros(3);
+% 
+% m1 = [b 0 0;
+%       0 0 0;
+%       0 0 b];
+% m2 = [b 0 b;
+%       0 0 0;
+%       b 0 b];
+% m3 = [b b b;
+%       0 0 0;
+%       b b b];
+% m4 = [b b b;
+%       b 0 b;
+%       b b b];
+% m5 = [b a b;
+%       a 0 a;
+%       b a b];
+% m6 = [a b a;
+%       b 0 b;
+%       a b a];
 
-m1 = [b 0 0;
-      0 0 0;
-      0 0 b];
-m2 = [b 0 b;
-      0 0 0;
-      b 0 b];
-m3 = [b b b;
-      0 0 0;
+m0 = zeros(3);
+m1 = [a a a;
+      a b a;
+      a a a];
+m2 = [b b b;
+      b a b;
       b b b];
-m4 = [b b b;
-      b 0 b;
-      b b b];
-m5 = [b a b;
+m3 = [b a b;
       a 0 a;
       b a b];
-m6 = [a b a;
+m4 = [a b a;
       b 0 b;
       a b a];
 
@@ -44,11 +58,9 @@ ma   = fun_matInterp2(m0,m1,nframes);
 mb   = fun_matInterp2(m1,m2,nframes);
 mc   = fun_matInterp2(m2,m3,nframes);
 md   = fun_matInterp2(m3,m4,nframes);
-me   = fun_matInterp2(m4,m5,nframes);
-mf   = fun_matInterp2(m5,m6,nframes);
 
-findGradient = {m0,m1,m2,m3,m4,m5,m6};
-concat       = {ma,mb,mc,md,me,mf};
+findGradient = {m0,m1,m2,m3,m4};
+concat       = {ma,mb,mc,md};
 m121         = cat(3,concat{:});
 [f,c,rgb]    = size(m121);
 nframes      = rgb;
