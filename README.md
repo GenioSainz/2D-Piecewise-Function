@@ -37,14 +37,14 @@ The gui uses [dat.GUI](https://github.com/dataarts/dat.gui) and allows:
 - The possibility to choose from predefined surface shapes.
 - The possibility to change the value of the shared corners by means of sliders, thus modifying the local shape of the surface.
 
-<p align="center"><img src="docs/imgs/gui.png"  width="40%"></p>
+<p align="center"><img src="docs/imgs/gui.PNG"  width="40%"></p>
 
 ## MATLAB IMPLEMENTATION
 
 I have programmed some Matlab scripts to generate animations of transitions of different values of the grid corners. In these examples the colour map is defined by the module of the gradient vector of the surface, giving a sense of how deformed the surface is.
 
 <img src="docs/imgs/image2.png"  width="100%">
-<img src="docs/imgs/gif.gif"  width="100%">
+<img src="docs/imgs/gif.gif"     width="100%">
 
 
 
