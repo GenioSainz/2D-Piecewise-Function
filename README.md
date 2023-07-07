@@ -2,8 +2,9 @@
 
 ## [LINK TO DEMO ...](https://geniosainz.github.io/2D-Piecewise-Function/)
 
-This JavaScript based [demo](https://geniosainz.github.io/2D-Piecewise-Function/) is based on the video [``Painting a Landscape with Maths´´](https://www.youtube.com/watch?v=BFld4EBO2RE&t=157s) by [Inigo Quilez](https://iquilezles.org/) in which he explains how to generate a landscape procedurally by adding terrain, vegetation, clouds and lighting models.
+This [demo](https://geniosainz.github.io/2D-Piecewise-Function/) implemented in JavaScript is based on the amazing video [``Painting a Landscape with Maths´´](https://www.youtube.com/watch?v=BFld4EBO2RE&t=157s) by [Inigo Quilez](https://iquilezles.org/) in which he explains how to generate a landscape procedurally by adding terrain, vegetation, clouds and lighting models. 
 
+The demo focuses on the part of the video where Iñigo models the terrain as a surface formed by square tiles defined by a grid of corners. To guarantee the connectivity between the tiles $f_{ij}$, the value of the grid corners $a,b,c,d$ of the shared cells has to be fixed. The connectivity is done in a smooth way using the [smoothstep](https://en.wikipedia.org/wiki/Smoothstep#:~:text=The%20function%20receives%20a%20real,is%20zero%20at%20both%20edges.) family of functions $S$.
 
  $$ 
  f_{ij}(x,y) = a_{ij}+
@@ -13,57 +14,44 @@ This JavaScript based [demo](https://geniosainz.github.io/2D-Piecewise-Function/
               d_{ij})S(x-i)S(y-j)
  $$
 
+Smoothstep family of curves:
+<img src="docs/imgs/smoothstep.png"  width="100%">
 ```js
-let smoothstepFuns = {
-                      smoothstep0: (t)=>  t,
-                      smoothstep1: (t)=> -2*t**3+3*t**2,
-                      smoothstep2: (t)=>  6*t**5-15*t**4+10*t**3,
-                      smoothstep3: (t)=> -20*t**7+70*t**6-84*t**5+35*t**4,
+let S = {
+         smoothstep0: (x)=>  x,
+         smoothstep1: (x)=> -2*x**3+3*x**2,
+         smoothstep2: (x)=>  6*x**5-15*x**4+10*x**3,
+         smoothstep3: (x)=> -20*x**7+70*x**6-84*x**5+35*x**4,
+        }                     
 ```
 
-<img src="docs/imgs/smoothstep.png"  width="100%">
-<img src="docs/imgs/gif.gif"  width="100%">
-
-
-shows graphically how Ken Perlin's [Improved Noise Algorithm](chrome-extension://efaidnbmnnnibpcajpcglclefindmkaj/https://mrl.cs.nyu.edu/~perlin/paper445.pdf) from 2002 works.  
-
-I have used as main library [P5.js](https://p5js.org/) for the representation of all the elements that involve the main grid and [Plotly.js](https://plotly.com/javascript/) for the creation of the dynamic graphics.
-
+Shape of the functions:
+<img src="docs/imgs/smoothsteps.png"  width="100%">
 
 ## DEMO FEATURES
 
-The demo shows how from an input point on the 2D grid 4 parameters are obtained by means of the dot product between:
-- Gradient vectors at the corners of each cell.  These vectors are defined by the seed of the algorithm.
-- The vectors defined by the entry point and the corners of each cell.
+The gui uses [dat.GUI](https://github.com/dataarts/dat.gui) and allows:
 
-By interpolating these parameters, the output of the algorithm is finally obtained.
+- Varying the colour map and aspect ratio of the surface.
+- The possibility to choose between the four smoothstep functions by modifying the interpolation and thus varying the shape of the surface. I have included the smoothstep0 function (linear function) to demonstrate that the connectivity is not smooth.
+- The possibility to choose from predefined surface shapes.
+- The possibility to change the value of the shared corners by means of sliders, thus modifying the local shape of the surface.
+
+<p align="center"><img src="docs/imgs/gui.png"  width="40%"></p>
+
+## MATLAB IMPLEMENTATION
+
+I have programmed some Matlab scripts to generate animations of transitions of different values of the grid corners. In these examples the colour map is defined by the module of the gradient vector of the surface, giving a sense of how deformed the surface is.
+
+<img src="docs/imgs/image2.png"  width="100%">
+<img src="docs/imgs/gif.gif"  width="100%">
 
 
-<img src="docs/imgs/img4.png"  width="100%">
 
-<ul>
-  <li><b>A:</b> Interpolations
 
-  <ul>
-    <li> Smoothstep interpolations: <i> U = Smoothstep( Xgrid ), V = Smoothstep( Ygrid ) </i></li>
-    <li> Corners values graph:      <i> A,B,C,D                                          </i></li>
-    <li> Lerp interpolations:       <i> AB = Lerp(U,A,B), CD = Lerp(U,C,D)               </i></li>
-  </ul>
 
-  </li>
 
-  <li><b>B:</b> Input grid representing...
-    <ul>
-        <li> The gradient vectors of each corner</li>
-        <li> The color map generated from the evaluation of the noise2D function for each pixel </li>
-    </ul>
-  </li>
 
-  <li><b>C:</b> 1D Noise slices traces of the 2D noise by plotting the row/column YY/XX vectors defined by the input (x,y) coordinates.
-
-  </li>
-
-</ul>
 
 
 

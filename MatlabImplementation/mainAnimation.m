@@ -2,7 +2,7 @@ clear all;clc;close all
 
 %%% Init corners
 %%%%%%%%%%%%%%%%%%
-nframes   = 80;
+nframes   = 50;
 n_corners = 3;
 a         = -3;
 b         = 3;
@@ -54,10 +54,12 @@ m4 = [a b a;
       b 0 b;
       a b a];
 
+
 ma   = fun_matInterp2(m0,m1,nframes);
 mb   = fun_matInterp2(m1,m2,nframes);
 mc   = fun_matInterp2(m2,m3,nframes);
 md   = fun_matInterp2(m3,m4,nframes);
+
 
 findGradient = {m0,m1,m2,m3,m4};
 concat       = {ma,mb,mc,md};
@@ -81,15 +83,15 @@ G       = sqrt(gX.^2+gY.^2);
 
 %%% Init Video
 %%%%%%%%%%%%%%%%%%
-videoName       = [pwd,'\animations\','prueba'];
+videoName       = [pwd,'\animations\','prueba600'];
 video           = VideoWriter(videoName ,'MPEG-4'); 
 video.Quality   = 80;
-video.FrameRate = 40;
+video.FrameRate = 15;
 open(video);
 
 %%% Init Figure
 %%%%%%%%%%%%%%%%%%
-set(gcf,'Position',[1 1 1000 1000]);set(gcf,'color','w');
+set(gcf,'Position',[1 1 800 800]);set(gcf,'color','w');
 
 hold on;pbaspect([1 1 0.75])
 box on;%ax = gca;ax.BoxStyle = 'full';

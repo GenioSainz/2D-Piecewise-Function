@@ -1,5 +1,3 @@
-
-
 // Divs Vars
 //////////////
 var id_plot  = 'id_plot';
@@ -14,7 +12,6 @@ function setup() {
     
     createCanvas(windowWidth,windowHeight);
     background(0);
-
 
     // div plotly
     ////////////////
