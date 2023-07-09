@@ -6,13 +6,11 @@ This [demo](https://geniosainz.github.io/2D-Piecewise-Function/) implemented in 
 
 The demo focuses on the part of the video where Iñigo models the terrain as a surface formed by square tiles defined by a grid of corners. To guarantee the connectivity between the tiles $f_{ij}$, the value of the grid corners $a,b,c,d$ of the shared cells has to be fixed. The connectivity is done in a smooth way using the [smoothstep](https://en.wikipedia.org/wiki/Smoothstep#:~:text=The%20function%20receives%20a%20real,is%20zero%20at%20both%20edges.) family of functions $S$.
 
- $$ 
- f_{ij}(x,y) = a_{ij}+ 
-              (b_{ij}-a_{ij})S(x-i)+
-              (c_{ij}-a_{ij})S(y-j)+\\
-              (a_{ij}-b_{ij}-c_{ij}+
-              d_{ij})S(x-i)S(y-j)
- $$
+$$\begin{eqnarray} 
+     f_{ij}(x,y) = a_{ij} & + & (b_{ij}-a_{ij})S(x-i)+(c_{ij}-a_{ij})S(y-j) \\
+                          & + & (a_{ij}-b_{ij}-c_{ij}+d_{ij})S(x-i)S(y-j)
+\end{eqnarray}$$
+
 
 Smoothstep family of curves:
 <img src="docs/imgs/smoothstep.png"  width="100%">
