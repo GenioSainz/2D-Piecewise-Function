@@ -51,7 +51,7 @@ var nCorners    = 3;
 var nGrid       = 101;
 var cornersMin  = -5;
 var cornersMax  =  5;
-var cornersStep = 1;
+var cornersStep = 0.5;
 
 // Tiles Coordinates
 ///////////////////////
@@ -254,6 +254,8 @@ function getTraces_tiles2D(x,y,corners_mat){
 
         var dataTiles = { 
                           name:'Surface',
+                          cauto:false,
+                          coloraxis:{cmax:-5,cmin:5},
                           opacity:1, 
                           showlegend: true,
                           type: 'surface', 
@@ -371,7 +373,6 @@ function init_layout(data){
 
         title: {text:`<b>2D PIECEWISE FUNCTION`,font:{size:20}},
         font: {
-            //size: 12,
             color: 'white'
           },
         width:  divSizeW,
@@ -381,6 +382,8 @@ function init_layout(data){
                bgcolor: axisColor,
                bordercolor: 'white',
                borderwidth: 2},
+        cauto:false,
+        coloraxis:{cmax:-5,cmin:5},
         scene:{
 
             aspectratio: {x:1, y:1, z:0.5},
@@ -448,7 +451,6 @@ function updatePlots_zRatio( zRatio){
         newScene.aspectratio = {x:1, y:1, z:zRatio}
         Plotly.relayout(id_plot,newScene);
 };
-
 
 function windowResized(){
   
