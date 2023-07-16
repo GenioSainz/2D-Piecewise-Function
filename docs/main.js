@@ -462,4 +462,53 @@ function windowResized(){
 
 
 
+// slope color map
+
+var Z    = tf.randomUniformInt([2, 2], 0, 100);
+var cell = x[1]-x[0]
+
+let [rows,cols] = Z.shape
+
+let rows0 = tf.zeros([1, cols]);
+let cols0 = tf.zeros([rows+2,1]);
+let Z0    = tf.concat([rows0, Z , rows0],0);
+    Z0    = tf.concat([cols0, Z0, cols0],1);
+    Z0.print();
+    //Z0    = Z0.arraySync();
+
+let xMask = tf.tensor([[-1,0,1],[-2,0,2],[-1,0,1]]);
+    xMask.print()
+let yMask = tf.tensor([[1,2,1] ,[0,0,0], [-1,-2,-1]]);
+    yMask.print()
+
+let G = tf.zeros( [rows,cols] ).arraySync();
+
+for(let i=1;i<rows+1;i++){
+
+    for(let j=1;j<cols+1;j++){
+    
+            //G[i-1][j-1] = Z0[i][j]
+
+            var slice33 =tf.slice(Z0,[i-1,j-1],[3,3]);
+                slice33.print();
+
+            slice33.mul(xMask).sum().print();
+            slice33.mul(yMask).print();
+    };
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
