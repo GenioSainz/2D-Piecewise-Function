@@ -30,7 +30,8 @@ Shape of the functions:
 
 The demo uses [dat.GUI](https://github.com/dataarts/dat.gui) and allows:
 
-- Varying the colour map and aspect ratio of the surface.
+- Vary the aspect ratio of the surface.
+- Vary colour map and mode according to height or slope.
 - The possibility to choose between the four smoothstep functions by modifying the interpolation and thus varying the shape of the surface. I have included the smoothstep0 function (linear function) to demonstrate that the connectivity is not smooth.
 - The possibility to choose from predefined surface shapes.
 - The possibility to change the value of the shared corners by means of sliders, thus modifying the local shape of the surface.

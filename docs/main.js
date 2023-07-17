@@ -48,10 +48,11 @@ var smoothstepN =  smoothstepFunctions.smoothstep2;
 // Corners Vars
 //////////////////
 var nCorners    = 3;
-var nGrid       = 101;
-var cornersMin  = -5;
-var cornersMax  =  5;
-var cornersStep = 0.5;
+var nGrid       = 41;
+var cornersMax  =  1;
+var cornersMin  = -1;
+var cornersStep = 0.1;
+var kCell       = 2;
 
 // Tiles Coordinates
 ///////////////////////
@@ -90,7 +91,8 @@ var guiVars = {
                 corner_I: 0,
                 shape:'shape3',
                 cMap:'Jet',
-                zRatio:0.5,
+                cMapMode:'Slope',
+                zRatio:0.6,
                 blendingFun:'smoothstep2'
 };
 
@@ -109,15 +111,11 @@ var guiVarsCornersKeys = Object.keys(guiVars).filter((key) => key.includes('corn
 //////////////////
 var gui   = new dat.GUI({width:guiWidth,autoPlace:false});
 
-// Folders Color Map
-///////////////////
-var folderColorMap = gui.addFolder('Color Map');
-    folderColorMap.add(guiVars, 'cMap', ['Portland','Picnic','Jet','Earth','Hot'] ).onChange( (cMap)=>{ updatePlots_ColorMap( cMap ) });
 
 // Folders Aspect Ratio
 ///////////////////
 var folderAspectRatio = gui.addFolder('Aspect Ratio');
-    folderAspectRatio.add(guiVars, 'zRatio',0.25,1.25,0.25).onChange( (zRatio)=>{ updatePlots_zRatio( zRatio) } );
+    folderAspectRatio.add(guiVars, 'zRatio',0.2,1.2,0.1).onChange( (zRatio)=>{ updatePlots_zRatio( zRatio) } );
 
 // Folders Smoothstep
 ///////////////////////
@@ -127,6 +125,16 @@ var folderFunctions = gui.addFolder('Blending Functions');
                                                                                                smoothstepN =  smoothstepFunctions[fun];
                                                                                                updatePlots_traces( getCornersMat() )
     });
+
+// Folders Color Map
+//////////////////////
+var folderColorMap = gui.addFolder('Color Map');
+    folderColorMap.add(guiVars, 'cMap', ['Portland','Picnic','Jet','Earth','Hot'] ).onChange( (cMap)=>{ updatePlots_ColorMap( cMap ) });
+
+// Folders Color Map By
+//////////////////////////
+var folderColorMapBy = gui.addFolder('Color Map By');
+    folderColorMapBy.add(guiVars, 'cMapMode', ['Slope','Height'] ).onChange( ()=>{ updatePlots_traces(getCornersMat())});
 
 // Folders Shapes
 ///////////////////
@@ -155,8 +163,9 @@ setTimeout(()=>{document.querySelector("#gui").append(gui.domElement)},2000);
 
 // Open guis
 ///////////////
-setTimeout(()=>{folderShapes.open()},2500);
-setTimeout(()=>{folderSliders.open()},3000);
+setTimeout(()=>{folderColorMapBy.open()},2500);
+setTimeout(()=>{folderShapes.open()},3000);
+setTimeout(()=>{folderSliders.open()},3500);
     
 // Initial Corners Mat and Plot
 //////////////////////////////////
@@ -243,7 +252,7 @@ function fun_evalTile(xj,yi,corners_mat){
 
 function getTraces_tiles2D(x,y,corners_mat){
         
-        var Z = tf.zeros([nGrid,nGrid]).arraySync();
+        var Z     = tf.zeros([nGrid,nGrid]).arraySync();
         
         for(let i=0;i<nGrid;i++){
             for(let j=0;j<nGrid;j++){
@@ -252,30 +261,26 @@ function getTraces_tiles2D(x,y,corners_mat){
             };
         };
 
+        var Gradient = get_gradientColorBorders(Z,x,y);
+
         var dataTiles = { 
                           name:'Surface',
-                          cauto:false,
-                          coloraxis:{cmax:-5,cmin:5},
                           opacity:1, 
                           showlegend: true,
                           type: 'surface', 
-                  
-                          colorscale:'Jet',
-                          colorbar:{
-                                        len:0.6,title:{ text:'',side:'right',font:{size:16}},
-                                        bgcolor:"rgb(150,150,150)",
-                                        bordercolor:"white",
-                                        borderwidth:2,
-                                    },
-                           x: X,
-                           y: Y,
-                           z: Z,
-                           contours: {
-                                z: {
-                                    show:true,
-                                    project:{z: false,usecolormap: false,},
-                                    highlightwidth:10,highlightcolor:"white",
-                                    start:cornersMin, end:cornersMax, size: 0.25}}
+                          coloraxis: 'coloraxis',
+
+                          x: X,
+                          y: Y,
+                          z: Z,
+                          surfacecolor:Gradient,
+
+                          contours: {
+                                    z: {
+                                        show:true,
+                                        project:{z: false,usecolormap: false,},
+                                        highlightwidth:10,highlightcolor:"white",
+                                        start:cornersMin, end:cornersMax, size: 0.05}}
                             };
 
         return dataTiles
@@ -283,7 +288,7 @@ function getTraces_tiles2D(x,y,corners_mat){
 
 function getTraces_corners(cornersMat){
 
-            var Z  = tf.tensor(cornersMat).flatten().add(0.1).arraySync();
+            var Z  = tf.tensor(cornersMat).flatten().add(0.05).arraySync();
 
             var scatterCorners = {
                             
@@ -367,46 +372,58 @@ function init_layout(data){
 
     var axisColor = "rgb(150,150,150)";
     var dxy       = 0.1;
-    var dz        = 1;
+    var dz        = 0.1;
 
     var layout   = {
 
         title: {text:`<b>2D PIECEWISE FUNCTION`,font:{size:20}},
-        font: {
-            color: 'white'
-          },
+        font:  {color: 'white'},
         width:  divSizeW,
         height: divSizeH,
         showlegend:true,
+
+        coloraxis:{
+                   // for fixed range
+                   //cmin:0,
+                   //cmax:350,
+                   cauto:true,
+                   colorscale:'Jet',
+                   colorbar:{
+                                 len:0.6,title:{ text:'Slope [%]',side:'top',font:{size:16}},
+                                 bgcolor:"rgb(150,150,150)",
+                                 bordercolor:"white",
+                                 borderwidth:2,
+                             },
+                },
+
         legend:{font:{size:16},
                bgcolor: axisColor,
                bordercolor: 'white',
                borderwidth: 2},
-        cauto:false,
-        coloraxis:{cmax:-5,cmin:5},
+
         scene:{
 
-            aspectratio: {x:1, y:1, z:0.5},
+            aspectratio: {x:1, y:1, z:0.6},
             xaxis:{ backgroundcolor: axisColor ,
                     gridcolor: "rgb(255,255,255)",
                     showbackground: true,
-                    zerolinecolor: "rgb(0,0,0)",title:'X',
+                    zerolinecolor: "rgb(0,0,0)",title:'X [m]',
                     range: [0-dxy,2+dxy ],
                     tickvals:[0,1,2],
             },
             yaxis:{ backgroundcolor: axisColor ,
                     gridcolor: "rgb(255,255,255)",
                     showbackground: true,
-                    zerolinecolor: "rgb(255, 255, 255)",title:'Y',
+                    zerolinecolor: "rgb(255, 255, 255)",title:'Y [m]',
                     range: [0-dxy,2+dxy ],
                     tickvals:[0,1,2],
             },
             zaxis:{ backgroundcolor: axisColor ,
                     gridcolor: "rgb(255,255,255)",
                     showbackground: true,
-                    zerolinecolor: "rgb(0,0,0)",title:'Z',
+                    zerolinecolor: "rgb(0,0,0)",title:'Z [m]',
                     range: [cornersMin-dz,cornersMax+dz],
-                    tickvals:[-5,-2.5,0,2.5,5],
+                    tickvals:[-1,0,1],
            },
         },
         margin: {
@@ -416,7 +433,7 @@ function init_layout(data){
             t: 50,
             pad: 2
           },
-          plot_bgcolor:"black",
+          plot_bgcolor: "black",
           paper_bgcolor:"black"
       };
 
@@ -426,12 +443,29 @@ function init_layout(data){
 
 function updatePlots_traces(cornersMat){
     
-    var zTiles        = getTraces_tiles2D(x,y,cornersMat).z;
-    var zCorners      = getTraces_corners(cornersMat).z;
-    var zGrid         = getTraces_grid(cornersMat,zTiles).z;
-    var surfaceUpdate = {'z':[zTiles]}
-    var cornersUpdate = {'z':[zCorners]}
-    var gridUpdate    = {'z':[zGrid]}
+    var {z,surfacecolor} = getTraces_tiles2D(x,y,cornersMat)
+    var zCorners         = getTraces_corners(cornersMat).z;
+    var zGrid            = getTraces_grid(cornersMat,z).z;
+    
+
+    var newTitle = {
+        coloraxis:document.getElementById(id_plot).layout.coloraxis
+     };
+
+    if(guiVars.cMapMode=='Slope'){
+
+          var surfaceUpdate   = {'z':[z], 'surfacecolor':[surfacecolor]};
+
+          newTitle.coloraxis.colorbar.title.text = 'Slope [%]';
+          Plotly.relayout(id_plot,newTitle);
+
+    }else{
+          var surfaceUpdate   = {'z':[z], 'surfacecolor':[z]}
+          newTitle.coloraxis.colorbar.title.text = 'Height [m]';
+          Plotly.relayout(id_plot,newTitle);
+    } 
+    var cornersUpdate    = {'z':[zCorners]}
+    var gridUpdate       = {'z':[zGrid]}
 
     Plotly.update(id_plot, surfaceUpdate, {}, [0]);
     Plotly.update(id_plot, cornersUpdate, {}, [1]);
@@ -442,7 +476,9 @@ function updatePlots_traces(cornersMat){
 
 function updatePlots_ColorMap(cMap){
 
-         Plotly.update(id_plot, {colorscale:cMap}, {}, [0]);
+         var newColoraxis = document.getElementById(id_plot).layout.coloraxis;
+         newColoraxis.colorscale = cMap;
+         Plotly.relayout(id_plot,newColoraxis);
 };
 
 function updatePlots_zRatio( zRatio){
@@ -460,42 +496,129 @@ function windowResized(){
 };
 
 
-
-
-// slope color map
-
-var Z    = tf.randomUniformInt([2, 2], 0, 100);
-var cell = x[1]-x[0]
-
-let [rows,cols] = Z.shape
-
-let rows0 = tf.zeros([1, cols]);
-let cols0 = tf.zeros([rows+2,1]);
-let Z0    = tf.concat([rows0, Z , rows0],0);
-    Z0    = tf.concat([cols0, Z0, cols0],1);
-    Z0.print();
-    //Z0    = Z0.arraySync();
-
-let xMask = tf.tensor([[-1,0,1],[-2,0,2],[-1,0,1]]);
-    xMask.print()
-let yMask = tf.tensor([[1,2,1] ,[0,0,0], [-1,-2,-1]]);
-    yMask.print()
-
-let G = tf.zeros( [rows,cols] ).arraySync();
-
-for(let i=1;i<rows+1;i++){
-
-    for(let j=1;j<cols+1;j++){
+function get_gradientColorTensor(Z,x,y){
     
-            //G[i-1][j-1] = Z0[i][j]
+    // implementation in tensor flow with xy masks 
 
-            var slice33 =tf.slice(Z0,[i-1,j-1],[3,3]);
-                slice33.print();
+    var Z     = tf.tensor(Z);
+    var cellX = (x[1]-x[0])*kCell;
+    var cellY = (y[1]-y[0])*kCell;
+    let [rows,cols] = Z.shape
 
-            slice33.mul(xMask).sum().print();
-            slice33.mul(yMask).print();
+    let rows0 = tf.zeros([1, cols]);
+    let cols0 = tf.zeros([rows+2,1]);
+    let Z0    = tf.concat([rows0, Z , rows0],0);
+        Z0    = tf.concat([cols0, Z0, cols0],1);
+
+    let xMask = tf.tensor([[-1,0,1],[-2,0,2],[-1,0,1]]);
+    let yMask = tf.tensor([[1,2,1] ,[0,0,0], [-1,-2,-1]]);
+    let G     = tf.zeros( [rows,cols] ).arraySync();
+
+    for(let i=1;i<rows+1;i++){
+        for(let j=1;j<cols+1;j++){
+        
+            var subMat33 = tf.slice(Z0,[i-1,j-1],[3,3]);
+            var dx       = subMat33.mul(xMask).sum().div(8*cellX).arraySync();
+            var dy       = subMat33.mul(yMask).sum().div(8*cellY).arraySync();
+            var slope    = Math.sqrt(dx**2+dy**2) * 100;
+            G[i-1][j-1]  = slope
+        };
     };
-};
+
+    return G
+}
+
+function get_gradientColor(Z,x,y){
+
+    // implementation in plain javascript
+    var Z     = tf.tensor(Z);
+    var cellX = (x[1]-x[0])*kCell;
+    var cellY = (y[1]-y[0])*kCell;
+    let [rows,cols] = Z.shape;
+
+    let rows0 = tf.zeros([1, cols]);
+    let cols0 = tf.zeros([rows+2,1]);
+    let Z0    = tf.concat([rows0, Z , rows0],0);
+        Z0    = tf.concat([cols0, Z0, cols0],1).arraySync();
+    let G     = tf.zeros( [rows,cols] ).arraySync();
+
+    for(let i=1;i<rows+1;i++){
+        for(let j=1;j<cols+1;j++){
+        
+            var z1 = Z0[i-1][j-1]; var z2 = Z0[i-1][j]; var z3 = Z0[i-1][j+1];
+            var z4 = Z0[i  ][j-1]; var z5 = Z0[i  ][j]; var z6 = Z0[i  ][j+1];
+            var z7 = Z0[i+1][j-1]; var z8 = Z0[i+1][j]; var z9 = Z0[i+1][j+1];
+            
+            var dx       = (z3+2*z6+z9-z1-2*z4-z7)/(8*cellX);
+            var dy       = (z1+2*z2+z3-z7-2*z8-z9)/(8*cellY);
+            var slope    = Math.sqrt(dx**2+dy**2) * 100;
+            G[i-1][j-1]  = slope
+        };
+    };
+
+    return G
+}
+
+function get_gradientColorBorders(Z,x,y){
+
+    // implementation in plain javascript
+    var Z     = tf.tensor(Z);
+    var cellX = (x[1]-x[0])*kCell;
+    var cellY = (y[1]-y[0])*kCell;
+    var [rows,cols] = Z.shape;
+    Z               = Z.arraySync();         
+    var G           = tf.zeros( [rows-2,cols-2] ).arraySync();
+
+    for(let i=1;i<rows-1;i++){
+        for(let j=1;j<cols-1;j++){
+        
+            var z1 = Z[i-1][j-1]; var z2 = Z[i-1][j]; var z3 = Z[i-1][j+1];
+            var z4 = Z[i  ][j-1]; var z5 = Z[i  ][j]; var z6 = Z[i  ][j+1];
+            var z7 = Z[i+1][j-1]; var z8 = Z[i+1][j]; var z9 = Z[i+1][j+1];
+            
+            var dx       = (z3+2*z6+z9-z1-2*z4-z7)/(8*cellX);
+            var dy       = (z1+2*z2+z3-z7-2*z8-z9)/(8*cellY);
+            var slope    = Math.sqrt(dx**2+dy**2) * 100;
+            G[i-1][j-1]  = slope
+        };
+    };
+    
+    var G = tf.tensor(G);
+
+    //console.log('MAX GRADIENT');G.max().print();
+
+    return  G.mirrorPad([[1, 1], [1, 1]], 'symmetric').arraySync();
+}
+
+
+
+
+function gradients_performance(n=10){
+
+    // comparison between the implementation in tensor flow with xy masks 
+    // and the implementation in plain javascript
+
+    var Z = tf.randomUniformInt([n, n], 0, 10).arraySync();
+
+    let start1 = new Date();console.log('START GRADIENT TENSOR')
+    var G1     = get_gradientColorTensor(Z,x,y)
+    console.log('END GRADIENT TENSOR:',`${(new Date()-start1)/1000} s`)
+
+    
+    let start2 = new Date();console.log('START GRADIENT JS')
+    let G2     = get_gradientColor(Z,x,y)
+    console.log('END GRADIENT JS:',`${(new Date()-start2)/1000} s`)
+
+    let start3 = new Date();console.log('START GRADIENT JS BORDES')
+    let G3     = get_gradientColorBorders(Z,x,y)
+    console.log('END GRADIENT JS BORDES:',`${(new Date()-start3)/1000} s`)
+
+    get_gradientColorBorders(Z,x,y)
+
+    console.log(G1)
+    console.log(G2)
+    console.log(G3)
+}
 
 
 
@@ -508,7 +631,4 @@ for(let i=1;i<rows+1;i++){
 
 
 
-
-
-
-
+var coloraxis = {colorbar:{title:{ text:'Slope [%]'}}}
