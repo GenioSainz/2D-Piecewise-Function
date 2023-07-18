@@ -38,6 +38,32 @@ The demo uses [dat.GUI](https://github.com/dataarts/dat.gui) and allows:
 
 <p align="center"><img src="docs/imgs/gui.PNG"  width="40%"></p>
 
+To represent the colour map as a function of slope it is necessary to calculate numerically the gradient of the tiles. It can be computed by convolution with the X,Y kernels.
+
+```js
+// let values = [[a,b,c],
+//               [d,e,f],
+//               [g,h,i],];
+
+let values = [[Z[i-1][j-1],Z[i-1][j],Z[i-1][j+1]],
+              [Z[i  ][j-1],Z[i  ][j],Z[i  ][j+1]],
+              [Z[i+1][j-1],Z[i+1][j],Z[i+1][j+1]],];
+
+let kernels = { X: [[-1,0,1],
+                    [-2,0,2],
+                    [-1,0,1]],
+
+                Y: [[-1,-2,-1],
+                    [ 0, 0, 0],
+                    [ 1, 2, 1]],
+               }; 
+
+let Gx = sum(values * kernels.X);
+let Gy = sum(values * kernels.Y);
+let G  = Math.sqrt( Gx**2 + Gy**2 )
+                                
+```
+
 ## MATLAB IMPLEMENTATION
 
 I have programmed some Matlab scripts to generate animations of transitions of different values of the grid corners. In these examples the colour map is defined by the module of the gradient vector of the surface, giving a sense of how deformed the surface is.

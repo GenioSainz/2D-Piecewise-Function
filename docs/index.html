@@ -2,27 +2,28 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>2D PIECEWISE</title>
+    <title>2D PIECEWISE FUNCTION</title>
     
     <style>
       
       html, body {
         margin: 0;
         padding: 0;
+        background-color: black;
       }
       canvas {
         display: block;
       };
 
-      #gui {
-              border: 1px solid white;
+      #id_gui {
+              border: 10px solid white;
       }
 
       .dg.a {
-    float: right;
-    margin-right: 105px;
-    overflow-y: visible;
-    }
+        float: right;
+        margin-right: 105px;
+        overflow-y: visible;
+      }
 
     </style>
 
@@ -30,12 +31,14 @@
 <body>
    
     <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js" ></script> -->
-    <script src="./LibrariesUtils/dat.gui.min.js"></script>
-    <script src="./LibrariesUtils/p5.min.js"></script>
-    <script src="./LibrariesUtils/myUtils.js"></script>
-    <script src="./LibrariesUtils/plotly.js"></script>
-    <script src="./LibrariesUtils/tensorFlowLibrary.js"></script>
-    <script src="./main.js"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest">        </script> -->
+    
+    <div    id  ="id_plotly"></div>
+    <div    id  ="id_gui"></div>
+    <script src ="./LibrariesUtils/dat.gui.min.js"></script>
+    <script src ="./LibrariesUtils/plotly.js"></script>
+    <script src ="./LibrariesUtils/tensorFlowLibrary.js"></script>
+    <script src ="./main.js"></script>
 
 
     

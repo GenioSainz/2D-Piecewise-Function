@@ -1,7 +1,7 @@
 
 function Z = fun_tiles2D(x,y,corners_mat)
 
-        Z   = zeros(length(corners_mat));
+        Z   = zeros(length(x),length(y));
         
         for i = 1:length(y)
             for j = 1:length(x)

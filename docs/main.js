@@ -1,37 +1,49 @@
 // Divs Vars
 //////////////
-var id_plot  = 'id_plot';
-var id_gui   = 'gui'
-var divPad   = 25;
-var guiWidth = 250
+var guiBorder = '1px white solid';
+var id_plotly = 'id_plotly';
+var id_gui    = 'id_gui';
+var divPad    = 25;
+var guiWidth  = 250
 
+// divs size used in init layout
+//////////////////////////////////
 var divSizeW
 var divSizeH
 
-function setup() {
-    
-    createCanvas(windowWidth,windowHeight);
-    background(0);
+var div_plot = document.getElementById(id_plotly);
+var div_gui  = document.getElementById(id_gui);
 
-    // div plotly
-    ////////////////
-    var div_plot = createDiv('').id(id_plot).style('border','1px black solid'); 
+var windowWidth  = window.innerWidth;
+var windowHeight = window.innerHeight;
 
-    if(windowWidth>windowHeight){
-            divSizeH = windowHeight - 2*divPad;
-            divSizeW = windowWidth  - 2*divPad - guiWidth;
-            div_plot.position(guiWidth + divPad,divPad)
-    }else{
-            divSizeH = windowHeight/2 - 2*divPad;
-            divSizeW = windowWidth    - 2*divPad;
-            div_plot.position(windowWidth/2-divSizeW/2,windowHeight/4)
-    };
+// divs position
+//////////////////
+if(windowWidth>windowHeight){
 
-    // div gui
-    /////////////
-    createDiv('').id(id_gui).position(0,0)
+        divSizeH  = windowHeight - 2*divPad;
+        divSizeW  = windowWidth  - 2*divPad - guiWidth;
+        var x_pos = guiWidth + divPad
+        var y_pos = divPad;
+}else{  
+        divSizeH  = windowHeight/2 - 2*divPad;
+        divSizeW  = windowWidth    - 2*divPad;
+        var x_pos = windowWidth/2-divSizeW/2
+        var y_pos = windowHeight/4;
 };
 
+divSetPoition(id_plotly , x_pos, y_pos)
+divSetPoition(id_gui,0,0)
+
+function divSetPoition(divID, x_pos, y_pos) {
+       
+        var div = document.getElementById(divID);
+            div.style.position = "absolute"  ;
+            div.style.left     = `${x_pos}px`;
+            div.style.top      = `${y_pos}px`;
+};
+
+window.addEventListener("resize", ()=>{ window.location.reload() });
 
 // smoothstepFunctions
 /////////////////////////
@@ -41,18 +53,21 @@ var smoothstepFunctions = {
                             smoothstep1: (t)=> -2*t**3+3*t**2,
                             smoothstep2: (t)=>  6*t**5-15*t**4+10*t**3,
                             smoothstep3: (t)=> -20*t**7+70*t**6-84*t**5+35*t**4,
-};
+                           };
 
 var smoothstepN =  smoothstepFunctions.smoothstep2;
 
-// Corners Vars
-//////////////////
+// Corners Vars 
+/////////////////////
 var nCorners    = 3;
 var nGrid       = 41;
 var cornersMax  =  1;
 var cornersMin  = -1;
 var cornersStep = 0.1;
 var kCell       = 2;
+// cellX = (x[1]-x[0])*kCell;
+// cellY = (y[1]-y[0])*kCell;
+// increase cellSize pfor decrease slope range color
 
 // Tiles Coordinates
 ///////////////////////
@@ -80,6 +95,11 @@ var shapes = {
              };
 
 var guiVars = {
+                blendingFun:'smoothstep2',
+                cMapMode:'Slope',
+                shape:'shape3',
+                cMap:'Jet',
+                zRatio:   0.6,
                 corner_A: 0,
                 corner_B: 0,
                 corner_C: 0,
@@ -89,16 +109,11 @@ var guiVars = {
                 corner_G: 0,
                 corner_H: 0,
                 corner_I: 0,
-                shape:'shape3',
-                cMap:'Jet',
-                cMapMode:'Slope',
-                zRatio:0.6,
-                blendingFun:'smoothstep2'
 };
 
-
 // Initial Corners Mat from guiVar
-////////////////////////////////////
+// Read from guiVar init shape and set corners in guiVar 
+///////////////////////////////////////////////////////////
 var initCornerMat      = shapes[guiVars.shape].flat();
 var guiVarsCornersKeys = Object.keys(guiVars).filter((key) => key.includes('corner_'));
    
@@ -106,11 +121,11 @@ var guiVarsCornersKeys = Object.keys(guiVars).filter((key) => key.includes('corn
                        guiVars[corner] = initCornerMat[indx];
     });
 
-
 // Gui creation
-//////////////////
-var gui   = new dat.GUI({width:guiWidth,autoPlace:false});
-
+// move gui to right div,add borders and open folders
+///////////////////////////////////////////////////////
+var gui = new dat.GUI({width:guiWidth,autoPlace:false});
+document.querySelector("#id_gui").append(gui.domElement);
 
 // Folders Aspect Ratio
 ///////////////////
@@ -123,9 +138,7 @@ var folderFunctions = gui.addFolder('Blending Functions');
     folderFunctions.add(guiVars, 'blendingFun', ['smoothstep0','smoothstep1','smoothstep2','smoothstep3']).onChange( (fun)=>{
                                                                                                                         
                                                                                                smoothstepN =  smoothstepFunctions[fun];
-                                                                                               updatePlots_traces( getCornersMat() )
-    });
-
+                                                                                               updatePlots_traces( getCornersMat() )});
 // Folders Color Map
 //////////////////////
 var folderColorMap = gui.addFolder('Color Map');
@@ -134,8 +147,9 @@ var folderColorMap = gui.addFolder('Color Map');
 // Folders Color Map By
 //////////////////////////
 var folderColorMapBy = gui.addFolder('Color Map By');
-    folderColorMapBy.add(guiVars, 'cMapMode', ['Slope','Height'] ).onChange( ()=>{ updatePlots_traces(getCornersMat())});
-
+    folderColorMapBy.add(guiVars, 'cMapMode', ['Slope','Height'] ).onChange( ()=>{ 
+                                                                                   updatePlots_traces(getCornersMat());
+                                                                                   updatePlots_LegenTitle()});
 // Folders Shapes
 ///////////////////
 var folderShapes = gui.addFolder('Shapes');
@@ -146,8 +160,7 @@ var folderShapes = gui.addFolder('Shapes');
                                                                                 }else{ 
                                                                                     setCornersMat(shapes[shape]) 
                                                                                 }
-                                                                                    updatePlots_traces( getCornersMat() );
-                                                                        });
+                                                                                    updatePlots_traces( getCornersMat() )});
 // Folder Corners SLIDER
 //////////////////////////
 var folderSliders = gui.addFolder('Corners Values');
@@ -157,30 +170,28 @@ var slidersArray  = Object.keys(guiVars).filter((key) => key.includes('corner_')
                                     folderSliders.add(guiVars,slider,cornersMin,cornersMax,cornersStep).onChange( ()=>{ updatePlots_traces(getCornersMat())  })
     });
 
-// Move gui to div
-/////////////////////
-setTimeout(()=>{document.querySelector("#gui").append(gui.domElement)},2000);
+// Gui borders title to HTML collection to Array
+///////////////////////////////////////////////////
+Array.from(document.getElementsByClassName('title')).forEach(e =>{e.style.border = guiBorder})
+document.getElementsByClassName('close-button')[0].style.border = guiBorder 
 
-// Open guis
-///////////////
-setTimeout(()=>{folderColorMapBy.open()},2500);
-setTimeout(()=>{folderShapes.open()},3000);
-setTimeout(()=>{folderSliders.open()},3500);
+// Open folders
+//////////////////
+setTimeout( ()=>{ folderColorMapBy.open() },2000);
+setTimeout( ()=>{ folderShapes    .open() },2500);
+setTimeout( ()=>{ folderSliders   .open() },3000);
     
 // Initial Corners Mat and Plot
-//////////////////////////////////
-setTimeout(()=>{
-            
-            // Init corners mat
-            var cornersMat = shapes[guiVars.shape]
-  
-            // Init layout data
-            var tiles   = getTraces_tiles2D(x,y,cornersMat);
-            var corners = getTraces_corners(cornersMat);
-            var grid    = getTraces_grid(cornersMat,tiles.z)
-            var data    = [tiles,corners,grid]
-            init_layout(data);
-},100);
+//////////////////////////////////   
+// Init corners mat
+var cornersMat = shapes[guiVars.shape]
+
+// Init layout data
+var tiles   = getTraces_tiles2D(x,y,cornersMat);
+var corners = getTraces_corners(cornersMat);
+var grid    = getTraces_grid(cornersMat,tiles.z)
+var data    = [tiles,corners,grid]
+init_layout(data);
 
 
 function getCornersMat(){
@@ -203,9 +214,9 @@ function setCornersMat(mat){
     // updates based on 
     // var slider_indx = 0;
     // for(let i=0;i<nCorners;i++){
-    //     for(let j=0;j<nCorners;j++){
-
-    //         //folderSliders.__controllers[slider_indx++].setValue(mat[i][j]).updateDisplay();
+    //  for(let j=0;j<nCorners;j++){
+    //
+    //         folderSliders.__controllers[slider_indx++].setValue(mat[i][j]).updateDisplay();
     //     };
     // };
     
@@ -219,16 +230,11 @@ function setCornersMat(mat){
 
 function randomCornes() {
 
-    min = Math.ceil(cornersMin);
-    max = Math.floor(cornersMax);
-
     var mat = [[],[],[]]
 
     for(let i=0;i<nCorners;i++){
-        for(let j=0;j<nCorners;j++){
-
-            mat[i][j] = Math.floor(Math.random() * (max - min + 1) + min);
-        };
+        for(let j=0;j<nCorners;j++){ 
+            mat[i][j] = (cornersMax - cornersMin) * Math.random() + cornersMin};
     };
     return mat
 };
@@ -252,6 +258,9 @@ function fun_evalTile(xj,yi,corners_mat){
 
 function getTraces_tiles2D(x,y,corners_mat){
         
+        // surface trace
+        ///////////////////
+
         var Z     = tf.zeros([nGrid,nGrid]).arraySync();
         
         for(let i=0;i<nGrid;i++){
@@ -288,7 +297,10 @@ function getTraces_tiles2D(x,y,corners_mat){
 
 function getTraces_corners(cornersMat){
 
-            var Z  = tf.tensor(cornersMat).flatten().add(0.05).arraySync();
+            // Corners + text corners
+            ////////////////////////////
+
+            var Z  = tf.tensor(cornersMat).flatten().add(0).arraySync();
 
             var scatterCorners = {
                             
@@ -299,7 +311,7 @@ function getTraces_corners(cornersMat){
                     type: 'scatter3d',
                     mode: 'markers+text',
                     text: ['A','B','C','D','E','F','G','H','I'],
-                    textfont:{size:22,color:'rgb(255,0,255)'},
+                    textfont:{size:24,color:'rgb(255,255,255)'},
                     showlegend:true,
                     legendgroup: 'Corners',
                     marker: { color: 'rgb(255,255,0)',symbol: 'circle',opacity: 1,size: 12,line: {color: 'rgb(0,0,0)',width: 1}}
@@ -312,7 +324,8 @@ function getTraces_corners(cornersMat){
 
 function getTraces_grid(corners_mat,Z){
     
-
+    // Grid black lines
+    ///////////////////////////
     var xy   = tf.linspace(0,nCorners-1,nGrid).arraySync();
     var xy0  = tf.ones([1,nGrid]).mul(0).arraySync()[0];
     var xy1  = tf.ones([1,nGrid]).mul(1).arraySync()[0];
@@ -373,6 +386,8 @@ function init_layout(data){
     var axisColor = "rgb(150,150,150)";
     var dxy       = 0.1;
     var dz        = 0.1;
+    var tickfont  = 14;
+    var titlefont = 16;
 
     var layout   = {
 
@@ -383,9 +398,9 @@ function init_layout(data){
         showlegend:true,
 
         coloraxis:{
-                   // for fixed range
-                   //cmin:0,
-                   //cmax:350,
+                   // for fixed color range, coloraxis is called in layout delaration
+                   // cmin:0,
+                   // cmax:350,
                    cauto:true,
                    colorscale:'Jet',
                    colorbar:{
@@ -410,6 +425,8 @@ function init_layout(data){
                     zerolinecolor: "rgb(0,0,0)",title:'X [m]',
                     range: [0-dxy,2+dxy ],
                     tickvals:[0,1,2],
+                    tickfont:{size:tickfont},
+                    titlefont: {size:titlefont}
             },
             yaxis:{ backgroundcolor: axisColor ,
                     gridcolor: "rgb(255,255,255)",
@@ -417,13 +434,17 @@ function init_layout(data){
                     zerolinecolor: "rgb(255, 255, 255)",title:'Y [m]',
                     range: [0-dxy,2+dxy ],
                     tickvals:[0,1,2],
+                    tickfont:{size:tickfont},
+                    titlefont: {size:titlefont}
             },
             zaxis:{ backgroundcolor: axisColor ,
                     gridcolor: "rgb(255,255,255)",
                     showbackground: true,
                     zerolinecolor: "rgb(0,0,0)",title:'Z [m]',
                     range: [cornersMin-dz,cornersMax+dz],
-                    tickvals:[-1,0,1],
+                    tickvals:[-1,,0,1],
+                    tickfont:{size:tickfont},
+                    titlefont: {size:titlefont}
            },
         },
         margin: {
@@ -437,64 +458,62 @@ function init_layout(data){
           paper_bgcolor:"black"
       };
 
-    Plotly.newPlot(id_plot ,data, layout,{displayModeBar: false})
+    Plotly.newPlot(id_plotly ,data, layout,{displayModeBar: false})
 
 };
 
 function updatePlots_traces(cornersMat){
     
+    // data
     var {z,surfacecolor} = getTraces_tiles2D(x,y,cornersMat)
     var zCorners         = getTraces_corners(cornersMat).z;
     var zGrid            = getTraces_grid(cornersMat,z).z;
     
-
-    var newTitle = {
-        coloraxis:document.getElementById(id_plot).layout.coloraxis
-     };
-
+    // update surface, corners, and grid
     if(guiVars.cMapMode=='Slope'){
 
           var surfaceUpdate   = {'z':[z], 'surfacecolor':[surfacecolor]};
-
-          newTitle.coloraxis.colorbar.title.text = 'Slope [%]';
-          Plotly.relayout(id_plot,newTitle);
-
     }else{
           var surfaceUpdate   = {'z':[z], 'surfacecolor':[z]}
-          newTitle.coloraxis.colorbar.title.text = 'Height [m]';
-          Plotly.relayout(id_plot,newTitle);
     } 
     var cornersUpdate    = {'z':[zCorners]}
     var gridUpdate       = {'z':[zGrid]}
 
-    Plotly.update(id_plot, surfaceUpdate, {}, [0]);
-    Plotly.update(id_plot, cornersUpdate, {}, [1]);
-    Plotly.update(id_plot, gridUpdate   , {}, [2]);
+    Plotly.update(id_plotly, surfaceUpdate, {}, [0]);
+    Plotly.update(id_plotly, cornersUpdate, {}, [1]);
+    Plotly.update(id_plotly, gridUpdate   , {}, [2]);
      
 };
 
+function updatePlots_LegenTitle(){
+
+    var newTitle = {
+        coloraxis:document.getElementById(id_plotly).layout.coloraxis
+     };
+
+    if(guiVars.cMapMode=='Slope'){
+          newTitle.coloraxis.colorbar.title.text = 'Slope [%]';
+          Plotly.relayout(id_plotly,newTitle);
+
+    }else{
+          newTitle.coloraxis.colorbar.title.text = 'Height [m]';
+          Plotly.relayout(id_plotly,newTitle);
+    } 
+}
 
 function updatePlots_ColorMap(cMap){
 
-         var newColoraxis = document.getElementById(id_plot).layout.coloraxis;
+         var newColoraxis = document.getElementById(id_plotly).layout.coloraxis;
          newColoraxis.colorscale = cMap;
-         Plotly.relayout(id_plot,newColoraxis);
+         Plotly.relayout(id_plotly,newColoraxis);
 };
 
 function updatePlots_zRatio( zRatio){
          
-        var newScene = document.getElementById(id_plot).layout.scene;
+        var newScene = document.getElementById(id_plotly).layout.scene;
         newScene.aspectratio = {x:1, y:1, z:zRatio}
-        Plotly.relayout(id_plot,newScene);
+        Plotly.relayout(id_plotly,newScene);
 };
-
-function windowResized(){
-  
-    resizeCanvas(windowWidth, windowHeight);
-    background(0);
-    window.location.reload()
-};
-
 
 function get_gradientColorTensor(Z,x,y){
     
@@ -562,6 +581,21 @@ function get_gradientColor(Z,x,y){
 function get_gradientColorBorders(Z,x,y){
 
     // implementation in plain javascript
+    // fixe borders with padding symetric => tensor.mirrorPad([[1, 1], [1, 1]], 'symmetric')
+    // instead 0 padding => tensor.pad([[1,1],[1,1]])
+
+    // [[0, 0, 0, 0, 0],
+    // [0, 1, 2, 3, 0],
+    // [0, 4, 5, 6, 0],
+    // [0, 7, 8, 9, 0],
+    // [0, 0, 0, 0, 0]]
+
+    // [[1, 1, 2, 3, 3],
+    // [1, 1, 2, 3, 3],
+    // [4, 4, 5, 6, 6],
+    // [7, 7, 8, 9, 9],
+    // [7, 7, 8, 9, 9]]
+
     var Z     = tf.tensor(Z);
     var cellX = (x[1]-x[0])*kCell;
     var cellY = (y[1]-y[0])*kCell;
@@ -590,9 +624,6 @@ function get_gradientColorBorders(Z,x,y){
     return  G.mirrorPad([[1, 1], [1, 1]], 'symmetric').arraySync();
 }
 
-
-
-
 function gradients_performance(n=10){
 
     // comparison between the implementation in tensor flow with xy masks 
@@ -619,16 +650,3 @@ function gradients_performance(n=10){
     console.log(G2)
     console.log(G3)
 }
-
-
-
-
-
-
-
-
-
-
-
-
-var coloraxis = {colorbar:{title:{ text:'Slope [%]'}}}
