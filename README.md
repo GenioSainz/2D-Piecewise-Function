@@ -26,6 +26,8 @@ let S = {
 Shape of the functions:
 <img src="docs/imgs/smoothsteps.png"  width="100%">
 
+Smoothstep in generalised form for an interval a,b-
+<img src="docs/imgs/smoothstepAB.png"  width="100%">
 ## DEMO FEATURES
 
 The demo uses [dat.GUI](https://github.com/dataarts/dat.gui) and allows:
