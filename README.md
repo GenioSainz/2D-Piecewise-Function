@@ -26,7 +26,7 @@ let S = {
 Shape of the functions:
 <img src="docs/imgs/smoothsteps.png"  width="100%">
 
-Smoothstep in generalised form for an interval a,b-
+Smoothstep in generalised form for an interval a,b.
 <img src="docs/imgs/smoothstepAB.png"  width="100%">
 ## DEMO FEATURES
 
@@ -41,6 +41,8 @@ The demo uses [dat.GUI](https://github.com/dataarts/dat.gui) and allows:
 <p align="center"><img src="docs/imgs/gui.PNG"  width="40%"></p>
 
 To represent the colour map as a function of slope it is necessary to calculate numerically the gradient of the tiles. It can be computed by convolution with the X,Y kernels.
+
+<img src="docs/imgs/gradient.png"  width="100%">
 
 ```js
 // let values = [[a,b,c],
@@ -62,7 +64,8 @@ let kernels = { X: [[-1,0,1],
 
 let Gx = sum(values * kernels.X);
 let Gy = sum(values * kernels.Y);
-let G  = Math.sqrt( Gx**2 + Gy**2 )
+let G  = Math.sqrt( Gx**2 + Gy**2 );
+
                                 
 ```
 
